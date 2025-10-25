@@ -1,0 +1,319 @@
+"""Second computing assignment.
+
+This code does the following:
+
+Prints the signature.
+Asks user for their name.
+Calls games_room function which does the following:
+
+Greets the user.
+Initiates the score to be 0.
+Enters an infinite loop, where it repeates the following actions:
+    Prints the score.
+    Asks what game user would like to play and prints information about available games.
+    Checks if user input corresponds to any of the key words (game names, help or quit commands).
+        Calls the desired game function.
+        Or prints the help message.
+        Or quits the infinite loop, prints the final score and thanks the user for playing.
+    
+Zyznikov Stepan, 400642557, McMaster 2025"""
+
+import random                 # Used to call randint (I would have import randint from random, 
+                              # the task specifies that I have to use random.randint())
+from sys import exit          # Used to exit the program if expected type of variable does not match the type of received variable
+from os import system         # Used to clear the screen
+from os import name as osname # Used to get users system to clear the screen properly
+from inspect import stack     # Used to get the mave of the function where type error occures
+
+def delete_last_line(): # https://en.wikipedia.org/wiki/ANSI_escape_code
+    """This function deletes the last line in the output screen. 
+    It does not return anything and only prints two ANSI escape codes.
+    First code moves the cursor up and second erases the line the cursor is pointing at.
+    """
+    print("\x1b[1A", "\x1b[2K",sep='', end='')
+
+def variable_type_check_to_error(variable, expected_variable_type):
+    """
+    Checks if variable type is the same as expected variable type.
+    If not - exits the program and prints an error message.
+
+    variable - the variable the type of which will be checked
+    expected_variable_type - the expected type of the variable
+    """
+    if not isinstance(variable, expected_variable_type):
+        print(f"Value type error has occured in {stack()[1][3]}:")
+        exit(f"Expected {expected_variable_type}, but got {type(variable)} instead.")
+
+def input_integer_check_with_borders(user_input: str, lower_border=None, upper_border=None):
+    """ Checks if user_input is an integer within the given range.
+    Calls itself recursively until receives satisfactory user input.
+    If a border is None or not entered, user_input will have no lower or upper limit (or both).
+    
+    user_input - string variable is expected
+    lower_border - inclusive lower border for user_input. Optional argument.
+    upper_border - inclusive upper border for user_input. Optional argument.
+    """
+    variable_type_check_to_error(user_input, str)
+    if user_input.isdigit():
+        if lower_border == None and upper_border == None:
+            return int(user_input)
+        
+        elif lower_border != None and upper_border != None:
+            if int(user_input) > upper_border or int(user_input) < lower_border:
+                delete_last_line()
+                print(f"{user_input} is not in [{lower_border}, {upper_border}]. Please, enter an integer number in [{lower_border}, {upper_border}].")
+                return input_integer_check_with_borders(input(), lower_border, upper_border)
+            
+        elif upper_border == None and lower_border != None:
+            if int(user_input) < lower_border:
+                delete_last_line()
+                print(f"{user_input} is smaller than {lower_border}. Please, enter an integer number bigger or equal than {lower_border}.")
+                return input_integer_check_with_borders(input(), lower_border, upper_border)
+            
+        elif upper_border != None and lower_border == None:
+            if int(user_input) > upper_border:
+                delete_last_line()  
+                print(f"{user_input} is bigger than {upper_border}. Please, enter an integer number smaller or equal than {upper_border}.")
+                return input_integer_check_with_borders(input(), lower_border, upper_border)
+
+        return int(user_input)
+
+    if user_input.isdigit() == False:
+        delete_last_line()
+        print(f"{user_input} is not a positive integer number. Please, enter a positive integer number.")
+        return input_integer_check_with_borders(input(), lower_border, upper_border)
+
+def colored_text(text: str, color="yellow"): # https://en.wikipedia.org/wiki/ANSI_escape_code
+    """Colors the given text with supported color.
+    List of supported colors: black, red, green, yellow, blue, magenta, cyan, white, grey.
+    If entered color is not in the list, text will not be colored (it will be white).
+    If no color is entered, the text will be colored in yellow.
+
+    text - text string that will be colored
+    color - string with desired color. Optional argument.
+    """
+    variable_type_check_to_error(text, str)
+    variable_type_check_to_error(color, str)
+    FG_code = 0                  # default color
+    if color.lower() == "black":
+        FG_code = 30
+    elif color.lower() == "red":
+        FG_code = 31
+    elif color.lower() == "green":
+        FG_code = 32
+    elif color.lower() == "yellow":
+        FG_code = 33    
+    elif color.lower() == "blue":
+        FG_code = 34
+    elif color.lower() == "magenta":
+        FG_code = 35
+    elif color.lower() == "cyan":
+        FG_code = 36      
+    elif color.lower() == "white":
+        FG_code = 37
+    elif color.lower() == "grey":
+        FG_code = 90
+
+    return f"\033[{FG_code}m{text}\033[0m" # Switches color to desired before text and resets text color in the end
+
+def return_emoji(symbol: int):
+    """Returns emoji according to symbol. 
+    Supported symbol values: 1, 2, 3, 4.
+    Returns 🍋, 🎄, 🍀, 💵 respectively.
+
+    symbol - integer code for emoji
+    """
+    variable_type_check_to_error(symbol, int)
+    if symbol == 1:
+        return "🍋" 
+    elif symbol == 2:
+        return "🎄"
+    elif symbol == 3:
+        return "🍀"
+    elif symbol == 4:
+        return "💵"
+    return f"{symbol} is not a supported emoji index"
+
+def look_away_round(move: int):
+    """Returns score for playing one round of look away and prints computers moves, 
+    player move and the outcome of the round.
+
+    move - players move, integer in range [1, 4]
+    """
+    variable_type_check_to_error(move, int)
+    first_computer_move = random.randint(1, 4)
+    second_computer_move = random.randint(1, 4)
+    print(f"1st computer move: {first_computer_move}, 2nd computer move: {second_computer_move},  your move: {move}. ", end="")
+    if move != first_computer_move and move != second_computer_move:
+        print(colored_text("you WON!", "green"))
+        score = 10
+    elif move == first_computer_move or move == second_computer_move:
+        print(colored_text("you LOST!", "red"))
+        score = 0
+    return score
+
+def look_away(first_move: int, second_move: int, third_move: int):
+    """Plays 3 rounds of look away game. Returns sum of points gained in these 3 rounds.
+
+    first_move, second_move, third_move - player moves. 3 integers in range [1, 4].
+    """
+    variable_type_check_to_error(first_move, int)
+    variable_type_check_to_error(second_move, int)
+    variable_type_check_to_error(third_move, int)
+    
+    score = 0
+    score += look_away_round(first_move)
+    score += look_away_round(second_move)
+    score += look_away_round(third_move)
+    return score
+
+def slot_machine(bet: int):
+    """Plays slot machine, prints the symbols on machine and amount of points player won.
+
+    bet - players bet. Has to be a positive integer not bigger than user's score (user cannot more points than they have).
+    """
+    variable_type_check_to_error(bet, int)
+    if bet <= 0:
+        print(colored_text("You cannot bet non-positive number of points.", "red"))
+        return 0
+    first_symbol = random.randint(1, 4)
+    second_symbol = random.randint(1, 4)
+    third_symbol = random.randint(1, 4)
+    print(f"|{return_emoji(first_symbol)}||{return_emoji(second_symbol)}||{return_emoji(third_symbol)}| ", end="")
+    if first_symbol == second_symbol and second_symbol == third_symbol:
+        print(colored_text("3 out of 3!", "green"))
+        return bet*5
+    elif first_symbol == second_symbol or second_symbol == third_symbol or third_symbol == first_symbol:
+        print(colored_text("2 out of 3!", "green"))
+        return bet*2
+    elif first_symbol != second_symbol and second_symbol != third_symbol and third_symbol != first_symbol:
+        print(colored_text("0 out of 3!", "red"))
+        return 0
+        
+def pig_dice(threshold: int):
+    """Plays pig dice and prints the outcome of the game.
+
+    threshold - positive integer number.
+    """
+    variable_type_check_to_error(threshold, int)
+    print(f"Threshold {threshold}. Rolls: ", end="")
+    dice_value_sum = 0
+    while True:
+        first_roll = random.randint(1, 6)
+        second_roll = random.randint(1, 6)
+        dice_value_sum += first_roll + second_roll
+        print(f"({first_roll}, {second_roll})", end="")
+
+        if first_roll == 1 and second_roll == 1:
+            print(f". {colored_text("Catastrophic loss. You lose all your points!", "red")}")
+            return -1
+        elif first_roll == 1 or second_roll == 1:
+            print(f". {colored_text("Regular loss. You don't gain any points!", "yellow")}")
+            return 0
+        elif dice_value_sum >= threshold:
+            print(f". {colored_text(f"Win! You gain {dice_value_sum} points!", "green")}")
+            return dice_value_sum
+        elif dice_value_sum < threshold:
+            print(", ", end="")
+
+def games_room(name):
+    """An indefinite loop that repeatedly does the following:
+    Prints current user score, asks user what game they would like to play or if they would like to receive help or exit the program.
+    If they chose a game - Plays chosen game.
+    If they chose help - prints a help message.
+    If they chose to quit - prints their final score and exits the loop.
+    If they did not choose anything - docks them a random amount of points between 1 and 20.
+
+    name - users name. Used to greet at the beginning and thank in the end.
+    """
+    variable_type_check_to_error(name, str)
+    delete_last_line()
+    print(f"Greetings, {name}!")
+    score = 0
+    while True:
+        print(f"\nYou have {colored_text(str(score))} points.")
+        print("\nWhat game would you like to play?")
+        print(f"Currently we have three games available: Mac Party {colored_text("Look Away")}, Mac Party {colored_text("Slot")} Machine and Mac Party {colored_text("Pig")}.")
+        print(f"Enter {colored_text("Quit")} if you want to quit.")
+        user_input = input().lower()
+
+        if osname == "nt": # linux and macOS don't have terminal command clc. 
+            system("cls")
+        elif osname == "posix": # They use "clear" to clear the terminal. nt is windows, posix - linux or macOS
+            system("clear") 
+
+        if user_input == "mac party look away" or user_input == "look away" or user_input == "l":
+            # Plays look away
+            print(f"You chose Mac Party {colored_text("Look Away")}. Enter 3 integer numbers in [1, 4].")
+            user_input_1 = input_integer_check_with_borders(input(), lower_border=1, upper_border=4)
+            user_input_2 = input_integer_check_with_borders(input(), lower_border=1, upper_border=4)
+            user_input_3 = input_integer_check_with_borders(input(), lower_border=1, upper_border=4)
+            score += look_away(user_input_1, user_input_2, user_input_3)
+
+        elif user_input == "mac party slot machine" or user_input == "slot" or user_input == "s":
+            # Plays slot machine
+            if score == 0:
+                print(f"You can't play Mac Party {colored_text("Slot")} Machine when you don't have any points.")
+            if score != 0:
+                print(f"You chose Mac Party {colored_text("Slot")} Machine. Enter an integer numbers in [1, {score}].")
+                user_input_1 = input_integer_check_with_borders(input(), lower_border=1, upper_border=score)
+                score -= user_input_1
+                score += slot_machine(user_input_1)
+
+        elif user_input == "mac party pig" or user_input == "pig" or user_input == "p":
+            # Plays pig dice
+            print(f"You chose Mac Party {colored_text("Pig")}. Enter an integer numbers bigger or equal than 1.")
+            user_input_1 = input_integer_check_with_borders(input(), lower_border=1)
+            pig_dice_output = pig_dice(user_input_1)
+            if pig_dice_output == -1:
+                score = 0
+            if pig_dice_output >= 0:
+                score += pig_dice_output
+
+        elif user_input == "help" or user_input == "h":
+            # Prints help message
+            print("Help is on the way!")
+            print("Currently there are five supported commands:")
+            print(f"{colored_text("GAMES")}:")
+            print(f"1. Mac Party {colored_text("Look Away")}")
+            print(f'This game can be accessed by following commands: "mac party look away", "look away", "l"')
+            print(f"2. Mac Party {colored_text("Slot")} Machine")
+            print(f'This game can be accessed by following commands: "mac party slot machine", "slot", "s"')
+            print(f"3. Mac Party {colored_text("Pig")}")
+            print(f'This game can be accessed by following commands: "mac party pig", "pig", "p"')
+            print(f"\n{colored_text("OTHER")} supported commands:")
+            print(f"4. {colored_text("Help")}")
+            print(f'Can be accessed by following commands: "help", "h"')
+            print(f"5. {colored_text("Quit")}")
+            print(f'Can be accessed by following commands: "quit", "q"')
+            print(f"\nPlease note, that {colored_text("letter case is not important")}.")
+
+        elif user_input == "quit" or user_input == "q":
+            # Quits the loop and prints final score
+            print(f"Thanks for coming in to play, {name}! You earned {colored_text(str(score))} points.")
+            break
+
+        else:
+            # Docks user some points if they have any
+            if score != 0:
+                penalty = random.randint(1, min(20, score))
+                score -= penalty
+                print(f"{user_input} is not a supported command. You lose {colored_text(str(penalty), "red")} for entering invalid command. Please, try again.")
+            else:
+                print(f"{user_input} is not a supported command. You would've lost points if you had any. Ha-ha! Please, try again.")
+
+def print_signature():
+    """Prints my signature.
+    """
+    print("-"*30)
+    print("Computing Assignment 2")
+    print("Written by Stepan Zyznikov")
+    print("Student number: 400642557")
+    print("Program: ENGINEERING CO-OP")
+    print("Subject: ENG 1P13: Integrated Cornerstone Design Projects in Engineering")
+    print("Professor: Dr. Sam Scott")
+    print("Term: Autumn 2025")
+    print("-"*30, "\n")
+
+print_signature()
+games_room(input("Enter your name: "))
