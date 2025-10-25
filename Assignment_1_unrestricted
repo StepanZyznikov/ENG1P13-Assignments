@@ -1,0 +1,205 @@
+"""The Kaboom assignment.
+
+It is a simple game, where you have to shoot asteroids in limited amount of tries.
+It starts by creating a black screen.
+Then it draws stars and two types of asteroids.
+Then it asks user how many shots they would need to score 50 poins. 
+(Asteroid_A is worth 10 points, asteroid_B is worth 20 points).
+Then it takes coordinates user enters and checks if there is a asteroid_A or asteroid_B color on given coordinates.
+If there is an asteroid, program registers the shot and draws an explosion to prevent shooting the same coordinates multiple times.
+If user scores 50 points, code stops asking for coordinates and displays "YOU WON!" text.
+If user runs out of shots, code displays "YOU LOST!" text.
+
+Zyznikov Stepan, 400642557, McMaster 2025"""
+
+# Import the turtle module
+import turtle as t
+from random import randint, random
+from pixels import check_pixel_color
+
+# Constants (you can change these)
+SCREEN_WIDTH = 1200
+SCREEN_HEIGHT = 600
+WINDOW_TITLE = "Kaboom_zyznikos"
+BACKGROUND_COLOR = "black"  
+STAR_COLOR = "yellow"
+ASTEROID_A_COLOR = "grey"
+ASTEROID_B_COLOR = "lightblue"
+NUMBER_OF_STARS = 100
+NUMBER_OF_ASTEROIDS_A = 10
+NUMBER_OF_ASTEROIDS_B = 10
+
+
+# Classes
+class Object: # Parent class for all drawn objects
+    def __init__(self, x, y, rotation_angle=0, size=10, color="white", outline_color=BACKGROUND_COLOR):
+        if x == None:
+            self.x = randint(0, SCREEN_WIDTH)
+        else:
+            self.x = x
+        if y == None:
+            self.y = randint(0, SCREEN_HEIGHT)
+        else:
+            self.y = y
+        self.rotation_angle = rotation_angle
+        self.size = size
+        self.color = color
+        self.outline_color = outline_color
+
+    def draw(self): # Every type of objects draws itself in a different way
+        pass
+
+    def scatter(self, number_of_objects, size_multiplier): # Draws objects on random coordinates with random rotation and size_multiplier
+        initial_size = self.size
+        for i in range(number_of_objects):
+            self.x = randint(-SCREEN_WIDTH // 2, SCREEN_WIDTH // 2)
+            self.y = randint(-SCREEN_HEIGHT // 2, SCREEN_HEIGHT // 2)
+            self.rotation_angle = randint(0, 360)
+            self.size = initial_size + initial_size * (size_multiplier / 2 - size_multiplier * random())
+            self.draw()
+
+class Star(Object): # A star class
+    def __init__(self, x=None, y=None, rotation_angle=0, size=15, color=STAR_COLOR, outline_color=BACKGROUND_COLOR):
+        super().__init__(x, y, rotation_angle, size, color, outline_color)
+
+    def draw(self): # Draws a star by combining 4 arcs and filling it with STAR_COLOR
+        t.color(self.outline_color)
+        t.fillcolor(self.color)
+
+        t.teleport(self.x-self.size, self.y)
+        t.setheading(self.rotation_angle)
+        
+        t.down()
+        t.begin_fill()
+        for i in range(4):
+            t.circle(self.size, 90)
+            t.right(180)
+        t.end_fill()
+        t.up()
+
+class Asteroid(Object): # An asteroid class. Draws a circle filled with color
+    def __init__(self, x=None, y=None, rotation_angle=0, size=30, color=ASTEROID_A_COLOR, outline_color=BACKGROUND_COLOR):
+        super().__init__(x, y, rotation_angle, size, color, outline_color)
+
+    def draw(self):
+        t.color(self.outline_color)
+        t.fillcolor(self.color)
+
+        t.teleport(self.x, self.y - self.size)
+        t.setheading(self.rotation_angle)
+
+        t.down()
+        t.begin_fill()
+        t.circle(self.size, 360)
+        t.end_fill()
+        t.up()
+
+class Explosion(Object): # An explosion class. Draws a pointy cross with red outline color and orange filling color
+    def __init__(self, x, y, rotation_angle=0, size=10, color="orange", outline_color="red"):
+        super().__init__(x, y, rotation_angle, size, color, outline_color)
+
+    def draw(self):
+        t.color(self.outline_color)
+        t.fillcolor(self.color)
+        t.width(2)
+
+        t.teleport(self.x, self.y)
+        t.setheading(self.rotation_angle)
+        
+        t.forward(0.75*self.size)
+        t.left(90)
+        t.forward(0.75*self.size)
+        t.right(15)
+
+        t.begin_fill()
+        t.down()
+        for i in range(4):
+            t.left(30)
+            t.forward(self.size*3)
+            t.left(150)
+            t.forward(self.size*3)
+            t.right(90)
+        t.end_fill()  
+        t.up()
+
+class Text_on_screen(Object): # A text class. NOT FINISHED. Displays text in rectange filled with color
+    def __init__(self, x, y, text, size=15, color=BACKGROUND_COLOR, outline_color="White", align="center", font=["Arial", 8, "normal"]):
+        super().__init__(x, y, size, color=color, outline_color=outline_color)
+        self.text = text
+        self.align = align
+        self.font = font
+
+    def draw(self):
+        text_length = len(self.text)
+
+        if self.align.lower() == "left":
+            shift = 1
+        elif self.align.lower() == "center":
+            shift = 1/2
+        else:
+            shift = 0
+        
+        t.fillcolor(self.color)
+        t.begin_fill()
+        
+        t.teleport(self.x + shift * text_length * self.font[1]*1.2, self.y)
+        t.setheading(180)
+        for i in range(2):
+            t.forward(text_length * self.font[1]*1.5)
+            t.left(90)
+            t.forward(20 + self.font[1]/3)
+            t.left(90)
+        t.end_fill()
+
+        t.teleport(self.x - 10, self.y - 26)
+        t.color(self.outline_color)
+        t.write(self.text, align=self.align, font=self.font)
+
+# Set up the screen object
+t.setup(SCREEN_WIDTH, SCREEN_HEIGHT, startx=None, starty=None)
+screen = t.Screen()
+screen.bgcolor(BACKGROUND_COLOR)
+t.tracer(10000, 0) # Performs every 10000th screen update
+screen.title(WINDOW_TITLE)
+
+# Create the turtle object
+t = t.Turtle()
+t.down()
+t.speed("fastest")
+t.hideturtle()
+
+## Start of your code
+Star(size=12).scatter(NUMBER_OF_STARS, size_multiplier=0.5)
+
+Asteroid(size=30, color=ASTEROID_A_COLOR).scatter(NUMBER_OF_ASTEROIDS_A, size_multiplier=0.5)
+Asteroid(size=20, color=ASTEROID_B_COLOR).scatter(NUMBER_OF_ASTEROIDS_B, size_multiplier=0)
+
+Asteroid(0, 0, 0).draw()
+number_of_shots = int(screen.numinput("Shot estimation", 
+                                      "How many shots will you need to score 50 points?", 10, minval=3, maxval=100))
+
+score = 0
+for i in range(number_of_shots):
+    Text_on_screen(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2, f"Score: {score}, shots left: {number_of_shots - i}", align="right", font=["Arial", 16, "normal"]).draw()
+    x = int(screen.numinput(f"Shot {i}", "Enter x coordinate", 0, minval=-SCREEN_WIDTH // 2, maxval=SCREEN_WIDTH // 2))
+    y = int(screen.numinput(f"Shot {i}", "Enter y coordinate", 0, minval=-SCREEN_HEIGHT // 2, maxval=SCREEN_HEIGHT // 2))
+    if check_pixel_color(x, y, ASTEROID_A_COLOR):
+        score += 10
+        Explosion(x, y).draw()
+    elif check_pixel_color(x, y, ASTEROID_B_COLOR):
+        score += 20
+        Explosion(x, y).draw()
+    if score >= 50:
+        break
+
+
+Text_on_screen(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2, f"Score: {score}, shots left: {number_of_shots - i}", 
+               align="right", font=["Arial", 16, "normal"]).draw()
+if score >= 50:
+    Text_on_screen(0, 0, "YOU WON!", color="green", outline_color="black", 
+                   align="center", font=["Arial", 16, "normal"]).draw()
+else:
+    Text_on_screen(0, 0, "YOU LOST!", color="red", outline_color="black", 
+                   align="center", font=["Arial", 16, "normal"]).draw()
+
+screen.exitonclick()
