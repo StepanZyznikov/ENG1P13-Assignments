@@ -1,0 +1,217 @@
+"""First computing assignment.
+
+This code does the following:
+
+Creates black screen.
+Draws 100 small yellow stars.
+Draws 10 big grey asteroids.
+Draws big grey asteroid in the middle of the screen.
+Draws 10 small lightblue asteroids.
+Asks the user for number of shots.
+In for loop asks for x and y coordinates of a shot.
+Draws an explosion if there is an asteroid on given coordinates.
+Adds 10 points to the score if grey asteroid was hit and 20, if lightblue asteroid was hit.
+Stops the for loop after number of shots iterations.
+Prints final score and number of shots.
+
+Zyznikov Stepan, 400642557, McMaster 2025"""
+
+# Impor turtle, randint from random and check_pixel_color
+import turtle
+from random import randint
+from pixels import check_pixel_color
+
+## Constants
+SCREEN_WIDTH = 1200
+SCREEN_HEIGHT = 600
+WINDOW_TITLE = "Zyznikos_ComputingAssignment1"
+BACKGROUND_COLOR = "black"
+STAR_COLOR = "yellow"
+ASTEROID_A_COLOR = "grey"
+ASTEROID_B_COLOR = "lightblue"
+EXPLOSION_OUTLINE_COLOR = "red"
+EXPLOSION_FILL_COLOR = "orange"
+NUMBER_OF_STARS = 100
+NUMBER_OF_ASTEROIDS_A = 10
+NUMBER_OF_ASTEROIDS_B = 10
+STAR_SIZE = 10
+ASTEROID_A_SIZE = 40
+ASTEROID_B_SIZE = 20
+
+# All coordinates are calculated from the middle of the canvas,
+# so these constants are used to limit drawing to canvas dimensions.
+WIDTH_DRAWING_LIMIT = SCREEN_WIDTH // 2
+HEIGHT_DRAWING_LIMIT = SCREEN_HEIGHT // 2
+
+# This is position of right-top corner of rectangle with text
+TEXT_X_POSITION = WIDTH_DRAWING_LIMIT - 20
+TEXT_Y_POSITION = HEIGHT_DRAWING_LIMIT - 40
+
+
+## Set up the screen object
+turtle.setup(SCREEN_WIDTH, SCREEN_HEIGHT)
+screen = turtle.Screen()
+screen.bgcolor(BACKGROUND_COLOR)
+
+# Screen will only update if screen.update() is used.
+screen.tracer(0)
+screen.title(WINDOW_TITLE)
+
+# Create the turtle object
+t = turtle.Turtle()
+t.hideturtle()
+
+
+## STARS
+t.color(BACKGROUND_COLOR)
+t.fillcolor(STAR_COLOR)
+for i in range(NUMBER_OF_STARS): # Star drawing loop
+    # Picks random coordinates and rotation for the star
+    x = randint(-WIDTH_DRAWING_LIMIT, WIDTH_DRAWING_LIMIT)
+    y = randint(-HEIGHT_DRAWING_LIMIT, HEIGHT_DRAWING_LIMIT)
+    rotation_angle = randint(0, 360)
+
+    t.teleport(x, y)
+    t.setheading(rotation_angle)
+
+    t.down()
+    t.begin_fill()
+    for j in range(4): # Draws 4 circular arcs that measures 90°
+        t.circle(STAR_SIZE, 90)
+        t.right(180)
+    t.end_fill()
+    t.up()
+
+screen.update()
+
+
+## ASTEROIDS TYPE A
+t.color(BACKGROUND_COLOR)
+t.fillcolor(ASTEROID_A_COLOR)
+for i in range(NUMBER_OF_ASTEROIDS_A): # Asteroids drawing loop
+    # Picks random coordinates and rotation for the asteroid
+    x = randint(-WIDTH_DRAWING_LIMIT, WIDTH_DRAWING_LIMIT)
+    y = randint(-HEIGHT_DRAWING_LIMIT, HEIGHT_DRAWING_LIMIT)
+    rotation_angle = randint(0, 360)
+
+    t.teleport(x, y)
+    t.setheading(rotation_angle)
+
+    t.down()
+    t.begin_fill()
+    t.circle(ASTEROID_A_SIZE, 360, randint(4, 8))
+    t.end_fill()
+    t.up()
+
+# Draws an asteroid on x = 0, y = 0 coordinates
+t.teleport(0, 0-ASTEROID_A_SIZE)
+t.setheading(0)
+
+t.down()
+t.begin_fill()
+t.circle(ASTEROID_A_SIZE, 360, randint(4, 8))
+t.end_fill()
+t.up()
+
+screen.update()
+
+
+## ASTEROID TYPE B
+t.color(BACKGROUND_COLOR)
+t.fillcolor(ASTEROID_B_COLOR)
+for i in range(NUMBER_OF_ASTEROIDS_B): # Asteroids drawing
+    x = randint(-WIDTH_DRAWING_LIMIT, WIDTH_DRAWING_LIMIT)
+    y = randint(-HEIGHT_DRAWING_LIMIT, HEIGHT_DRAWING_LIMIT)
+    rotation_angle = randint(0, 360)
+
+    t.teleport(x, y - ASTEROID_B_SIZE)
+    t.setheading(rotation_angle)
+
+    t.down()
+    t.begin_fill()
+    t.circle(ASTEROID_B_SIZE, 360, randint(4, 8))
+    t.end_fill()
+    t.up()
+
+screen.update()
+
+
+## Input of number of shots (minimum number of shots = 3, maximum = 100)
+# Pressing cancel will cause program to crash. I could have avoid it if I was allowed to use if statements
+number_of_shots = int(screen.numinput("Shot estimation",
+                                      "DO NOT PRESS CANCEL. How many shots would you like to take?", 10, minval=1, maxval=100))
+
+
+## ASTEROID SHOOTING LOOP
+score = 0
+for shot_number in range(number_of_shots):
+    # Draws a rectangle before the text for improved visibility
+    t.fillcolor(BACKGROUND_COLOR) 
+    t.teleport(WIDTH_DRAWING_LIMIT, HEIGHT_DRAWING_LIMIT)
+    t.begin_fill()
+    t.goto(WIDTH_DRAWING_LIMIT - 300, HEIGHT_DRAWING_LIMIT)
+    t.goto(WIDTH_DRAWING_LIMIT - 300, HEIGHT_DRAWING_LIMIT - 50)
+    t.goto(WIDTH_DRAWING_LIMIT, HEIGHT_DRAWING_LIMIT - 50)
+    t.goto(WIDTH_DRAWING_LIMIT, HEIGHT_DRAWING_LIMIT)
+    t.end_fill()
+
+    # Writes the score and number of shots left
+    t.color("White")
+    t.teleport(TEXT_X_POSITION, TEXT_Y_POSITION)
+    t.write(f"Score: {score}, shots left: {number_of_shots - shot_number}",
+            align="right", font=("Arial", 16, "normal"))
+
+    # Input x and y
+    # Pressing cancel will cause program to crash. I could have avoid it if I was allowed to use if statements
+    x = int(screen.numinput(f"Shot {shot_number}", "DO NOT PRESS CANCEL. Enter x coordinate", 0,
+            minval=-WIDTH_DRAWING_LIMIT, maxval=WIDTH_DRAWING_LIMIT))
+    y = int(screen.numinput(f"Shot {shot_number}", "DO NOT PRESS CANCEL. Enter y coordinate", 0,
+            minval=-HEIGHT_DRAWING_LIMIT, maxval=HEIGHT_DRAWING_LIMIT))
+    
+    # Checks if there is and asteroid on x, y coordinates
+    asteroid_a_shot = check_pixel_color(x, y, ASTEROID_A_COLOR)
+    asteroid_b_shot = check_pixel_color(x, y, ASTEROID_B_COLOR)
+
+    # Draws explosion out of screen if there was no asteroid on x, y coordinates
+    # If there was an asteroid on x, y coordinates, draws explosion on x, y coordinates instead
+    x += 1500*(asteroid_a_shot + asteroid_b_shot - 1)
+    y += 1500*(asteroid_a_shot + asteroid_b_shot - 1)
+
+    # If an asteroid was shot adds points to score
+    score += 10 * asteroid_a_shot + 20 * asteroid_b_shot
+
+
+    ## Explosion drawing
+    t.color(EXPLOSION_OUTLINE_COLOR)
+    t.fillcolor(EXPLOSION_FILL_COLOR)
+    t.width(2)
+
+    t.teleport(x, y)
+    t.setheading(0)
+
+    t.forward(0.75*10)
+    t.left(90)
+    t.forward(0.75*10)
+    t.right(15)
+
+    t.begin_fill()
+    t.down()
+    for i in range(4):
+        t.left(30)
+        t.forward(10*3)
+        t.left(150)
+        t.forward(10*3)
+        t.right(90)
+    t.end_fill()
+    t.up()
+
+# Clears the screen
+screen.clear()
+screen.bgcolor(BACKGROUND_COLOR)
+
+# Writes final score in the middle of the screen
+t.teleport(0, 0)
+t.color(STAR_COLOR)
+t.write(f"You scored {score} points in {number_of_shots} shots.", align="center", font=("Arial", 32, "normal"))
+screen.update()
+screen.exitonclick()
