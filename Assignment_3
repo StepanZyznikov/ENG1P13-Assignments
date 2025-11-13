@@ -1,0 +1,107 @@
+"""Third computing assignment.
+
+This program defines three functions that partially implement the Mastermind game.
+
+new_code(filename, duplicates, n) 
+Generates and returns a randomly created list of colors from the file filename.
+
+score_red(code, guess) 
+Compares two lists element-by-element and returns 
+number of identical elements on the same positions and a boolean list as a result of the 
+element-by-element comparison.
+
+score_white(code, guess, redlist)
+Counts how many colors are present in two lists, but have different positions.
+    
+Zyznikov Stepan, 400642557, McMaster 2025"""
+
+from random import randint
+
+FILE_PATH: str = "colors.txt"
+
+def new_code(filename: str, duplicates: bool, n: int) -> list[str] | bool:
+    """Generates and returns a randomly created list of **n** words from **filename**.
+    If **duplicates** is True, the generated list can have duplicate entries.
+    If **duplicates** is False, the generated list will not have duplicate entries.
+
+    If **n** is greater than the number of words in the file and **duplicates** is False, such a list
+    cannot be generated, and the function will return False.
+    If **n** < 0, the function returns False. If **n** == 0, it returns an empty list.
+
+    **filename** - string that has to contain absolute path to the file or its name. (The path is preferred).
+    **duplicates** - bool that controls if duplicates should appear in the returned list or not.
+    **n** - int that defines the length of generated list.
+    """
+
+    with open(file=filename, mode='r') as file:
+        names: list[str] = list([name.removesuffix('\n') for name in file.readlines()])
+    
+    names_length: int = len(names)
+    code: list[str] = []
+
+    if n < 0 or (not duplicates and n > names_length): # If the list cannot be created or does not make sense, return False.
+        return False
+    else:
+        if duplicates: # If duplicates are allowed, list of random words from file is created.
+            for _ in range(n):
+                code.append(names[randint(0, names_length-1)])
+        elif n <= names_length: # If duplicates are prohibited, code does the following:
+            for _ in range(n):
+                choice: int = randint(0, names_length-1) # Chooses a random word from the list of words from file
+                code.append(names[choice]) # Adds chosen word to the returned list
+                names_length -= 1 # Decreases the number of remaining words in the list of words from the file
+                names.pop(choice) # Removes chosen word from the list of words from the file
+        return code
+
+def score_red(code: list, guess: list) -> list[int | bool, list[bool]]:
+    """Compares two lists (**code** and **guess**) and returns two items: 
+    First item is a number of elements of the given lists that have the same position and value.
+    The second item is a list of boolean values. It is a result of consecutive comparison. 
+    If both lists have the same first entry, the first entry of the boolean list will be True; 
+    otherwise, it will be False.
+
+    If given lists have different lengths, comparison cannot be done. 
+    In that case (False, []) will be returned.
+
+    **code** and **guess** - two lists of the same length. 
+    """
+
+    code_length: int = len(code)
+    guess_length: int = len(guess)
+    if code_length != guess_length: # If the lists cannot be compared, False and empty list are returned
+        return False, []
+    else:
+        bool_list: list[bool] = []
+        for i in range(code_length):
+            bool_list.append(code[i] == guess[i])
+        return bool_list.count(True), bool_list
+
+def score_white(code: list, guess: list, redlist: list) -> int:
+    """Compares two lists (**code** and **guess**) and returns a number of items from the first list, 
+    that are in the second list, but do not have the same index. No item from either list can be counted twice.
+
+    If any of the given lists have different lengths, the function returns -1.
+
+    **code** and **guess** - two lists of the same length. 
+    **redlist** - list of boolean values. Has to be the second item from return of the **score_red** function.
+    """
+    if len(code) != len(guess) or len(guess) != len(redlist):
+        return -1
+
+    counter: int = 0
+    checked_colors: list[str] = []
+    for color in code:
+        if color in guess and not color in checked_colors:
+            counter += min(code.count(color), guess.count(color))
+            checked_colors.append(color)
+    return counter - redlist.count(True)
+
+
+if __name__ == "__main__": # demonstration
+    code: list[str] = new_code(FILE_PATH, False, 5)
+    guess: list[str] = new_code(FILE_PATH, False, 5)
+    redscore, redlist = score_red(code, guess)
+    print(f"Code:  {code}")
+    print(f"Guess: {guess}")
+    print(f"Red pegs: {redscore}")
+    print(f"White pegs: {score_white(code, guess, redlist)}")
