@@ -1,0 +1,102 @@
+from os import system         # Used to clear the screen
+from os import name as osname # Used to get users system to clear the screen properly
+from inspect import stack     # Used to get the mave of the function where type error occures
+
+def delete_last_line(): # https://en.wikipedia.org/wiki/ANSI_escape_code
+    """This function deletes the last line in the output screen. 
+    It does not return anything and only prints two ANSI escape codes.
+    First code moves the cursor up and second erases the line the cursor is pointing at.
+    """
+    print("\x1b[1A", "\x1b[2K",sep='', end='')
+
+def clear_screen():
+    if osname == "nt": # linux and macOS don't have terminal command clc. 
+        system("cls")
+    elif osname == "posix": # They use "clear" to clear the terminal. nt is windows, posix - linux or macOS
+        system("clear") 
+
+def variable_type_check_to_error(variable, expected_variable_type):
+    """
+    Checks if variable type is the same as expected variable type.
+    If not - exits the program and prints an error message.
+
+    variable - the variable the type of which will be checked
+    expected_variable_type - the expected type of the variable
+    """
+    if not isinstance(variable, expected_variable_type):
+        print(f"Value type error has occured in {stack()[1][3]}:")
+        exit(f"Expected {expected_variable_type}, but got {type(variable)} instead.")
+
+def input_integer_check_with_borders(user_input: str, lower_border=None, upper_border=None):
+    """ Checks if user_input is an integer within the given range.
+    Calls itself recursively until receives satisfactory user input.
+    If a border is None or not entered, user_input will have no lower or upper limit (or both).
+    
+    user_input - string variable is expected
+    lower_border - inclusive lower border for user_input. Optional argument.
+    upper_border - inclusive upper border for user_input. Optional argument.
+    """
+    variable_type_check_to_error(user_input, str)
+    if user_input.isdigit():
+        if lower_border == None and upper_border == None:
+            return int(user_input)
+        
+        elif lower_border != None and upper_border != None:
+            if int(user_input) > upper_border or int(user_input) < lower_border:
+                delete_last_line()
+                print(f"{user_input} is not in [{lower_border}, {upper_border}]. Please, enter an integer number in [{lower_border}, {upper_border}].")
+                return input_integer_check_with_borders(input(), lower_border, upper_border)
+            
+        elif upper_border == None and lower_border != None:
+            if int(user_input) < lower_border:
+                delete_last_line()
+                print(f"{user_input} is smaller than {lower_border}. Please, enter an integer number bigger or equal than {lower_border}.")
+                return input_integer_check_with_borders(input(), lower_border, upper_border)
+            
+        elif upper_border != None and lower_border == None:
+            if int(user_input) > upper_border:
+                delete_last_line()  
+                print(f"{user_input} is bigger than {upper_border}. Please, enter an integer number smaller or equal than {upper_border}.")
+                return input_integer_check_with_borders(input(), lower_border, upper_border)
+
+        return int(user_input)
+
+    if user_input.isdigit() == False:
+        delete_last_line()
+        print(f"{user_input} is not a positive integer number. Please, enter a positive integer number.")
+        return input_integer_check_with_borders(input(), lower_border, upper_border)
+
+def colored_text(text: str, color="yellow"): # https://en.wikipedia.org/wiki/ANSI_escape_code
+    """Colors the given text with supported color.
+    List of supported colors: black, red, green, yellow, blue, magenta, cyan, white, grey, orange.
+    If entered color is not in the list, text will not be colored (it will be white).
+    If no color is entered, the text will be colored in yellow.
+
+    text - text string that will be colored
+    color - string with desired color. Optional argument.
+    """
+    variable_type_check_to_error(text, str)
+    variable_type_check_to_error(color, str)
+    FG_code = 0                  # default color
+    if color.lower() == "black":
+        FG_code = 30
+    elif color.lower() == "red":
+        FG_code = 91
+    elif color.lower() == "green":
+        FG_code = 32
+    elif color.lower() == "yellow":
+        FG_code = 33    
+    elif color.lower() == "blue":
+        FG_code = 34
+    elif color.lower() == "magenta":
+        FG_code = 35
+    elif color.lower() == "cyan":
+        FG_code = 36      
+    elif color.lower() == "white":
+        FG_code = 37
+    elif color.lower() == "grey":
+        FG_code = 90
+    elif color.lower() == "orange":
+        FG_code = 31
+
+    return f"\033[{FG_code}m{text}\033[0m" # Switches color to desired before text and resets text color in the end
