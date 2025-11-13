@@ -1,0 +1,124 @@
+from random import randint
+from useful_functions import colored_text, input_integer_check_with_borders
+
+class Code:
+    """The class that contains mastermind code and all information relevant to it.
+
+    This class has the follwoing functions:
+    create_color_dict(self) -> dict[str: list[str]]
+    create(self, code_length) -> None
+    create_from_input(self) -> None
+    colored_code(self) -> str
+    print(self) -> None
+    count_colors(self) -> dict[str: int]
+    """
+    def __init__(self, number_of_colors: int, code: list[str] = [], code_length: int = 0):
+        self.number_of_colors: int = number_of_colors
+        self.color_dict: dict[str: list[str]] = self.create_color_dict()
+        if code != []:
+            self.code: list[str] = code
+            self.code_length: int = len(code)
+        elif code == [] and code_length > 0:
+            self.create(code_length)
+            self.code_length: int = code_length
+        elif code == [] and code_length <= 0:
+            self.create(4)
+            self.code_length: int = 4
+
+    def create_color_dict(self) -> dict[str: list[str]]:
+        default_color_dict: dict[str: list[str]] = {"red": ["red", "r"], "ylw": ["yellow", "ylw", "y"], 
+                                                    "grn": ["green", "grn", "g"], "blu" :["blue", "blu"],
+                                                    "blk": ["black", "blk"], "wht": ["white", "wht", "w"], 
+                                                    "pnk": ["pink", "pnk", "p"], "org": ["orange", "org", "o"]}
+        color_list: list[str] = ["red", "ylw", "grn", "blu", "pnk", "wht", "blk", "org"]
+        for i in range(len(color_list) - 1, self.number_of_colors - 1, -1):
+            default_color_dict.pop(color_list[i])
+        return default_color_dict
+        
+    def create(self, code_length) -> None:
+        self.code: list[str] = [list(self.color_dict.keys())[randint(0, self.number_of_colors-1)] for _ in range(code_length)]
+
+    def create_from_input(self) -> None:
+        self.code: list[str] = []
+        for i in range(self.code_length):
+            incorrect_input: bool = True
+            while incorrect_input:
+                user_input: str = input(f"Enter {i} color: ").lower()
+                for key in self.color_dict.keys():
+                    if user_input in self.color_dict[key]:
+                        self.code.append(key)
+                        incorrect_input = False
+                if incorrect_input:
+                    print("That's not a supported color!")
+
+    def colored_code(self) -> str:
+        output: str = ""
+        colors: dict[str: str] = {"red": "red", "ylw": "yellow", "grn": "green", "blu": "blue", 
+                "blk": "grey", "wht": "white", "pnk": "magenta", "org": "orange"}
+        for name in self.code:
+            output += colored_text("@@@ ", colors[name])
+        return output
+
+    def print(self) -> None:
+        print(self.colored_code())
+
+    def count_colors(self) -> dict[str: int]:
+        return {color: self.code.count(color) for color in set(self.code)}
+
+class Game:
+    """The class that implements the Mastermind game.
+
+    This class has the following functions:
+    score_red(self) -> None
+    score_white(self) -> None
+    compare(self) -> bool
+    enter_gameloop(self) -> None
+    """
+    def __init__(self, number_of_colors, code_length):
+        self.number_of_colors: int = max(2, min(number_of_colors, 8))
+        self.code_length: int = code_length
+        self.secret_code: Code = Code(self.number_of_colors, code_length=code_length)
+        self.secret_code.create(code_length)
+        self.guess: Code = Code(self.number_of_colors, code_length=code_length)
+        self.number_of_full_overlaps: int 
+        self.number_of_partial_overlaps: int
+        
+    def score_red(self) -> None:
+        self.comparison_list: list = []
+        for i in range(self.secret_code.code_length):
+            self.comparison_list.append(self.secret_code.code[i] == self.guess.code[i])
+        self.number_of_full_overlaps = self.comparison_list.count(True)
+    
+    def score_white(self) -> None:
+        secret_code_colors_dict: dict[str: int] = self.secret_code.count_colors()
+        guess_colors_dict: dict[str: int] = self.guess.count_colors()
+        # Я уже жалею, что решил в одну строчку это сделать
+        self.number_of_partial_overlaps = sum(min(secret_code_colors_dict[color], guess_colors_dict[color]) 
+                                              for color in set(self.secret_code.code) if color in guess_colors_dict.keys()) - self.comparison_list.count(True)
+        
+    def compare(self) -> bool:
+        return all(self.secret_code.code[i] == self.guess.code[i] for i in range(self.code_length))
+
+    def enter_gameloop(self) -> None:
+        print(f"Here is how the game works: you enter {self.number_of_colors} colors from list of supported colors and receive a feedback.")
+        print(f"The game will end when you guess the secret code")
+        print(f"Here is the list of supported colors: {list(self.secret_code.create_color_dict().keys())}")
+        while not self.compare():
+            self.guess.create_from_input()
+            #clear_screen()
+            self.guess.print()
+            self.score_red()
+            self.score_white()
+            print(f"You fully guessed {colored_text(str(self.number_of_full_overlaps))} colors.")
+            print(f"You partially guessed {colored_text(str(self.number_of_partial_overlaps))} colors.")
+        print(f"\nCONGRATULATIONS! YOU WON!")
+
+def main():
+    print("Welcome to Master Mind!")
+    user_number_of_colors = input_integer_check_with_borders(input("Enter number of colors: "), 2, 8)
+    user_code_length = input_integer_check_with_borders(input("Enter code length: "), 1, 10)
+    game = Game(user_number_of_colors, user_code_length)
+    game.enter_gameloop()
+
+if __name__ == "__main__":
+    main()
